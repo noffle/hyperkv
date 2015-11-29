@@ -1,0 +1,17 @@
+{
+  "name": "hyperkv",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "BSD",
+  "devDependencies": {
+    "hyperlog": "^4.6.0",
+    "level": "^1.4.0",
+    "subleveldown": "^2.1.0"
+  }
+}
