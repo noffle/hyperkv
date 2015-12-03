@@ -1,0 +1,15 @@
+hyperkv put KEY VALUE {OPTIONS}
+
+  Insert a json VALUE at KEY.
+
+	--links  Comma-separated list of ancestor hashes
+
+hyperkv get KEY
+
+  Print a json object for the values at KEY,
+	mapping hashes to values.
+
+hyperkv list
+
+  Print a list of keys and values as json, one per line.
+
