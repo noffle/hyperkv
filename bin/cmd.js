@@ -24,10 +24,8 @@ var idb = level(path.join(argv.d, 'index'))
 
 var hyperkv = require('../')
 var hyperlog = require('hyperlog')
-var kv = hyperkv({
-  log: hyperlog(ldb, { valueEncoding: 'json' }),
-  db: idb
-})
+var log = hyperlog(ldb, { valueEncoding: 'json' })
+var kv = hyperkv({ db: idb, log: log })
 
 if (argv._[0] === 'put' && argv._.length >= 2) {
   var key = argv._[1]
