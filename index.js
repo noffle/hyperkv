@@ -3,6 +3,8 @@ var inherits = require('inherits')
 var indexer = require('hyperlog-index')
 var once = require('once')
 var EventEmitter = require('events').EventEmitter
+var readonly = require('read-only-stream')
+var through = require('through2')
 
 module.exports = KV
 inherits(KV, EventEmitter)
@@ -70,6 +72,33 @@ KV.prototype.get = function (key, cb) {
       })
     })
   })
+}
+
+KV.prototype.createReadStream = function (opts) {
+  var self = this
+  if (!opts) opts = {}
+  var stream = through.obj(write)
+  self.dex.ready(function () {
+    self.xdb.createReadStream().pipe(stream)
+  })
+  return readonly(stream)
+
+  function write (row, enc, next) {
+    var nrow = {
+      key: row.key,
+      links: row.value
+    }
+    if (opts.values !== false) {
+      self.get(row.key, function (err, values) {
+        if (err) return next(err)
+        nrow.values = values
+        next()
+      })
+    } else {
+      self.push(nrow)
+      next()
+    }
+  }
 }
 
 function notFound (err) {

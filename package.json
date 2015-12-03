@@ -1,6 +1,6 @@
 {
   "name": "hyperkv",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "p2p key/value store over a [hyperlog][1] using a [multi-value register conflict strategy][2]",
   "main": "index.js",
   "scripts": {
@@ -26,7 +26,9 @@
     "hyperlog-index": "^4.0.0",
     "inherits": "^2.0.1",
     "once": "^1.3.3",
-    "subleveldown": "^2.1.0"
+    "read-only-stream": "^2.0.0",
+    "subleveldown": "^2.1.0",
+    "through2": "^2.0.0"
   },
   "directories": {
     "example": "example",
