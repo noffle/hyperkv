@@ -92,6 +92,21 @@ refer to the current "head" key hashes.
 Get the list of current values for `key` as `cb(err, values)` where `values`
 maps hyperlog hashes to set values.
 
+## var stream = kv.createReadStream(opts)
+
+Create a readable object mode `stream` for each key/values in the store.
+
+Each object `row` has:
+
+* `row.key` - the key set with `.put()`
+* `row.links` - array of hashes that are the current holders for the key
+* `row.values` - object mapping hashes to values
+
+Optionally:
+
+* `opts.values` - set to `false` to turn off setting `row.values`, which
+requires an extra lookup in the implementation
+
 ## kv.on('put', function (key, value, node) {})
 
 Whenever a node is put, this event fires.
