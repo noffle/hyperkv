@@ -20,7 +20,10 @@ function KV (opts) {
       ;(keys || []).forEach(function (key) { doc[key] = true })
       row.links.forEach(function (link) { delete doc[link] })
       doc[row.key] = true
-      self.xdb.put(row.value.k, Object.keys(doc), next)
+      self.xdb.put(row.value.k, Object.keys(doc), function (err) {
+        if (!err) self.emit('update', row.value.k, row.value.v, row)
+        next(err)
+      })
     })
   })
 }
