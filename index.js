@@ -77,9 +77,15 @@ KV.prototype.get = function (key, cb) {
 KV.prototype.createReadStream = function (opts) {
   var self = this
   if (!opts) opts = {}
+  var xopts = {
+    gt: opts.gt,
+    gte: opts.gte,
+    lt: opts.lt,
+    lte: opts.lte
+  }
   var stream = through.obj(write)
   self.dex.ready(function () {
-    self.xdb.createReadStream().pipe(stream)
+    self.xdb.createReadStream(xopts).pipe(stream)
   })
   return readonly(stream)
 
@@ -92,10 +98,11 @@ KV.prototype.createReadStream = function (opts) {
       self.get(row.key, function (err, values) {
         if (err) return next(err)
         nrow.values = values
+        stream.push(nrow)
         next()
       })
     } else {
-      self.push(nrow)
+      stream.push(nrow)
       next()
     }
   }

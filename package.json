@@ -18,6 +18,7 @@
   "author": "substack",
   "license": "BSD",
   "devDependencies": {
+    "collect-stream": "^1.1.1",
     "hyperlog": "^4.7.0",
     "memdb": "^1.0.1",
     "tape": "^4.2.2"
