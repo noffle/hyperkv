@@ -92,6 +92,10 @@ refer to the current "head" key hashes.
 Get the list of current values for `key` as `cb(err, values)` where `values`
 maps hyperlog hashes to set values.
 
+## kv.on('put', function (key, value, node) {})
+
+Whenever a node is put, this event fires.
+
 # install
 
 ```
