@@ -46,6 +46,10 @@ if (argv._[0] === 'put' && argv._.length >= 2) {
   kv.createReadStream(argv).on('data', function (row) {
     console.log(JSON.stringify(row))
   })
+} else if (/^(push|pull|sync)$/.test(argv._[0])) {
+  var r = log.replicate({ mode: argv._[0] })
+  process.stdin.pipe(r).pipe(process.stdout)
+  r.on('end', function () { process.stdin.pause() })
 } else usage(1)
 
 function usage (code) {

@@ -136,6 +136,12 @@ hyperkv list
 
   Print a list of keys and values as json, one per line.
 
+hyperkv push
+hyperkv pull
+hyperkv sync
+
+  Replicate with another hyperkv using stdin and stdout.
+
 ```
 
 # install
