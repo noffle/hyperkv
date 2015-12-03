@@ -116,10 +116,33 @@ Whenever a node is put, this event fires.
 Whenever the indexes update through a put or replication, this event fires with
 the underlying `node` object from the hyperlog.
 
+# usage
+
+This package ships with a `hyperkv` command.
+
+```
+hyperkv put KEY VALUE {OPTIONS}
+
+  Insert a json VALUE at KEY.
+
+	--links  Comma-separated list of ancestor hashes
+
+hyperkv get KEY
+
+  Print a json object for the values at KEY,
+	mapping hashes to values.
+
+hyperkv list
+
+  Print a list of keys and values as json, one per line.
+
+```
+
 # install
 
 ```
 npm install hyperkv
+npm install -g hyperkv
 ```
 
 # license
