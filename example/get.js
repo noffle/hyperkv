@@ -6,7 +6,7 @@ var level = require('level')
 var db = level('/tmp/kv.db')
 
 var kv = hyperkv({
-  log: hyperlog(sub(db, 'log')),
+  log: hyperlog(sub(db, 'log'), { valueEncoding: 'json' }),
   db: sub(db, 'kv')
 })
 

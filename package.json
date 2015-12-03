@@ -9,9 +9,9 @@
   "keywords": [],
   "author": "",
   "license": "BSD",
-  "devDependencies": {
-    "hyperlog": "^4.6.0",
-    "level": "^1.4.0",
+  "devDependencies": {},
+  "dependencies": {
+    "hyperlog-index": "^4.0.0",
     "subleveldown": "^2.1.0"
   }
 }
