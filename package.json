@@ -9,7 +9,11 @@
   "keywords": [],
   "author": "",
   "license": "BSD",
-  "devDependencies": {},
+  "devDependencies": {
+    "hyperlog": "^4.7.0",
+    "memdb": "^1.0.1",
+    "tape": "^4.2.2"
+  },
   "dependencies": {
     "hyperlog-index": "^4.0.0",
     "subleveldown": "^2.1.0"
