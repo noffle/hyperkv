@@ -5,13 +5,18 @@ var hyperlog = require('hyperlog')
 var sub = require('subleveldown')
 
 test('kv', function (t) {
-  t.plan(6)
+  t.plan(9)
   var db = memdb()
   var kv = hyperkv({
     log: hyperlog(sub(db, 'log'), { valueEncoding: 'json' }),
     db: sub(db, 'kv')
   })
   kv.on('put', function (key, value, node) {
+    t.equal(key, 'A')
+    t.equal(value, 555)
+    t.equal(node.seq, 1)
+  })
+  kv.on('update', function (key, value, node) {
     t.equal(key, 'A')
     t.equal(value, 555)
     t.equal(node.seq, 1)
