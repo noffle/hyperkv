@@ -96,6 +96,11 @@ maps hyperlog hashes to set values.
 
 Whenever a node is put, this event fires.
 
+## kv.on('update', function (key, value, row) {})
+
+Whenever the indexes update through a put or replication, this event fires with
+the underlying `row` object from the hyperlog.
+
 # install
 
 ```
