@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "hyperlog-index": "^4.0.0",
+    "inherits": "^2.0.1",
     "once": "^1.3.3",
     "subleveldown": "^2.1.0"
   },

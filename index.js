@@ -1,12 +1,16 @@
 var sub = require('subleveldown')
+var inherits = require('inherits')
 var indexer = require('hyperlog-index')
 var once = require('once')
+var EventEmitter = require('events').EventEmitter
 
 module.exports = KV
+inherits(KV, EventEmitter)
 
 function KV (opts) {
   if (!(this instanceof KV)) return new KV(opts)
   var self = this
+  EventEmitter.call(self)
   self.log = opts.log
   self.idb = sub(opts.db, 'i')
   self.xdb = sub(opts.db, 'x', { valueEncoding: 'json' })
@@ -36,8 +40,11 @@ KV.prototype.put = function (key, value, opts, cb) {
   } else {
     self.dex.ready(function () {
       self.xdb.get(key, function (err, links) {
-        if (err && !notFound(err)) cb(err)
-        else self.log.add(links || [], doc, cb)
+        if (err && !notFound(err)) return cb(err)
+        self.log.add(links || [], doc, function (err, node) {
+          cb(err, node)
+          self.emit('put', key, value, node)
+        })
       })
     })
   }
