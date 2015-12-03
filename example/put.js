@@ -13,6 +13,7 @@ var kv = hyperkv({
 var key = process.argv[2]
 var value = process.argv[3]
 
-kv.put(key, value, function (err) {
+kv.put(key, value, function (err, node) {
   if (err) console.error(err)
+  else console.log(node.key)
 })

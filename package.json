@@ -1,13 +1,21 @@
 {
   "name": "hyperkv",
   "version": "1.0.0",
-  "description": "",
+  "description": "p2p key/value store over a [hyperlog][1] using a [multi-value register conflict strategy][2]",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "tape test/*.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "hyperlog",
+    "key",
+    "value",
+    "store",
+    "p2p",
+    "replication",
+    "distributed"
+  ],
+  "author": "substack",
   "license": "BSD",
   "devDependencies": {
     "hyperlog": "^4.7.0",
@@ -18,5 +26,17 @@
     "hyperlog-index": "^4.0.0",
     "once": "^1.3.3",
     "subleveldown": "^2.1.0"
-  }
+  },
+  "directories": {
+    "example": "example",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/substack/hyperkv.git"
+  },
+  "bugs": {
+    "url": "https://github.com/substack/hyperkv/issues"
+  },
+  "homepage": "https://github.com/substack/hyperkv#readme"
 }
