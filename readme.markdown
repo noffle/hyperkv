@@ -92,6 +92,21 @@ refer to the current "head" key hashes.
 Get the list of current values for `key` as `cb(err, values)` where `values`
 maps hyperlog hashes to set values.
 
+If there are no known values for `key`, `values` will be `{}`.
+
+## kv.del(key, opts={}, cb)
+
+Remove `key`.
+
+If `opts.links` is set, refer to previously set keys. Otherwise, the key will
+refer to the current "head" key hashes.
+
+Note that keys are only removed with respect to `opts.links`, not globally and
+that edits made in forks may cause deleted keys to "reappear". This is by
+design.
+
+`cb(err, node)` fires from the underlying `log.add()` call.
+
 ## var stream = kv.createReadStream(opts)
 
 Create a readable object mode `stream` for each key/values in the store.
