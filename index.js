@@ -34,10 +34,15 @@ function KV (opts) {
         var doc = {}
         ;(keys || []).forEach(function (key) { doc[key] = true })
         row.links.forEach(function (link) { delete doc[link] })
-        self.xdb.put(row.value.d, Object.keys(doc), function (err) {
+        var keys = Object.keys(doc)
+        if (keys.length === 0) {
+          self.xdb.del(row.value.d, onput)
+        } else self.xdb.put(row.value.d, keys, onput)
+
+        function onput (err) {
           if (!err) self.emit('remove', row.value.d, row)
           next(err)
-        })
+        }
       })
     }
   })

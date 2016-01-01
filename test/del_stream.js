@@ -6,7 +6,7 @@ var sub = require('subleveldown')
 var collect = require('collect-stream')
 
 test('del stream', function (t) {
-  t.plan(15)
+  t.plan(16)
   var db = memdb()
   var kv = hyperkv({
     log: hyperlog(sub(db, 'log'), { valueEncoding: 'json' }),
@@ -51,20 +51,18 @@ test('del stream', function (t) {
     collect(kv.createReadStream(), function (err, rows) {
       t.ifError(err)
       var expected = []
-      expected[0].values[nodes.D.key] = 222
-      expected[0].values[nodes.E.key] = 400
       expected.push({
         key: 'Y',
         links: [ nodes.F.key ],
         values: {}
       })
-      expected[1].values[nodes.F.key] = 999
+      expected[0].values[nodes.F.key] = 999
       expected.push({
         key: 'Z',
         links: [ nodes.I.key ],
         values: {}
       })
-      expected[2].values[nodes.I.key] = 3000
+      expected[1].values[nodes.I.key] = 3000
       t.deepEqual(rows, expected, 'stream {}')
     })
     collect(kv.createReadStream({ values: false }), function (err, rows) {

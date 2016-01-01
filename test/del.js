@@ -4,7 +4,7 @@ var memdb = require('memdb')
 var hyperlog = require('hyperlog')
 var sub = require('subleveldown')
 
-test('delete', function (t) {
+test('del', function (t) {
   t.plan(12)
   var db = memdb()
   var kv = hyperkv({
