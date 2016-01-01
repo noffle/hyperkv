@@ -5,7 +5,7 @@ var hyperlog = require('hyperlog')
 var sub = require('subleveldown')
 
 test('delete', function (t) {
-  t.plan(11)
+  t.plan(12)
   var db = memdb()
   var kv = hyperkv({
     log: hyperlog(sub(db, 'log'), { valueEncoding: 'json' }),
@@ -35,10 +35,8 @@ test('delete', function (t) {
     kv.del('A', function (err) {
       t.ifError(err)
       kv.get('A', function (err, values) {
-        t.ok(
-          err && (err.notFound || /notfound/i.test(err.message)),
-          'not found'
-        )
+        t.ifError(err)
+        t.deepEqual(values, {})
       })
     })
   }
