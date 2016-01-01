@@ -30,9 +30,14 @@ function KV (opts) {
         })
       })
     } else if (row.value.d !== undefined) {
-      self.xdb.put(row.value.d, [], function (err) {
-        if (!err) self.emit('remove', row.value.d, row)
-        next(err)
+      self.xdb.get(row.value.d, function (err, keys) {
+        var doc = {}
+        ;(keys || []).forEach(function (key) { doc[key] = true })
+        row.links.forEach(function (link) { delete doc[link] })
+        self.xdb.put(row.value.d, Object.keys(doc), function (err) {
+          if (!err) self.emit('remove', row.value.d, row)
+          next(err)
+        })
       })
     }
   })
