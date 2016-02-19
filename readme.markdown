@@ -122,6 +122,21 @@ Optionally:
 * `opts.values` - set to `false` to turn off setting `row.values`, which
 requires an extra lookup in the implementation
 
+## var stream = kv.createHistoryStream(key, opts={})
+
+Create a readable object mode `stream` with the history of `key`.
+
+Each `row` object in the output stream has:
+
+* `row.key` - the key (as in key/value) of the document
+* `row.link` - the hyperlog key (version hash) of the current document
+* `row.links` - array of version hashes that are ancestors of this document
+* `row.value` - value associated with this document
+
+You might want to topologically sort the output before displaying it.
+Otherwise, documents will always appear before their ancestors, but documents in
+a fork have an undefined ordering.
+
 ## kv.on('put', function (key, value, node) {})
 
 Whenever a node is put, this event fires.
