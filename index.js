@@ -2,9 +2,11 @@ var sub = require('subleveldown')
 var inherits = require('inherits')
 var indexer = require('hyperlog-index')
 var once = require('once')
+var has = require('has')
 var EventEmitter = require('events').EventEmitter
 var readonly = require('read-only-stream')
 var through = require('through2')
+var Readable = require('readable-stream').Readable
 
 module.exports = KV
 inherits(KV, EventEmitter)
@@ -127,6 +129,49 @@ KV.prototype.createReadStream = function (opts) {
       stream.push(nrow)
       next()
     }
+  }
+}
+
+KV.prototype.createHistoryStream = function (key, opts) {
+  var self = this
+  if (!opts) opts = {}
+  var stream = new Readable({ objectMode: true })
+  var queue = null, reading = false
+  stream._read = function () {
+    if (!queue) {
+      reading = true
+      return
+    }
+    if (queue.length === 0) return stream.push(null)
+    var q = queue.shift()
+    if (has(seen, q)) return stream._read()
+    seen[q] = true
+    self.log.get(q, onget)
+  }
+
+  var seen = {}
+  self.dex.ready(function () {
+    self.xdb.get(key, function (err, heads) {
+      queue = heads
+      if (reading) stream._read()
+    })
+  })
+  return stream
+
+  function onget (err, doc) {
+    if (err) return stream.emit('error', err)
+    var rdoc = {
+      key: doc.value ? doc.value.k : null,
+      link: doc.key,
+      value: doc.value ? doc.value.v : null,
+      links: doc.links
+    }
+    if (doc.identity) rdoc.identity = doc.identity
+    if (doc.signature) rdoc.signature = doc.signature
+    ;(doc.links || []).forEach(function (link) {
+      if (!has(seen, link)) queue.push(link)
+    })
+    stream.push(rdoc)
   }
 }
 
