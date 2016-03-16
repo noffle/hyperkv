@@ -46,7 +46,7 @@ function KV (opts) {
           next(err)
         }
       })
-    }
+    } else next()
   })
 }
 
