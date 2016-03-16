@@ -18,7 +18,12 @@ function KV (opts) {
   self.log = opts.log
   self.idb = sub(opts.db, 'i')
   self.xdb = sub(opts.db, 'x', { valueEncoding: 'json' })
-  self.dex = indexer(self.log, self.idb, function (row, next) {
+  self.dex = indexer({
+    log: self.log,
+    db: self.idb,
+    map: mapfn
+  })
+  function mapfn (row, next) {
     if (!row.value) return next()
     if (row.value.k !== undefined) {
       self.xdb.get(row.value.k, function (err, keys) {
@@ -47,7 +52,7 @@ function KV (opts) {
         }
       })
     } else next()
-  })
+  }
 }
 
 KV.prototype.put = function (key, value, opts, cb) {

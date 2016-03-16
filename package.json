@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "has": "^1.0.1",
-    "hyperlog-index": "^4.0.0",
+    "hyperlog-index": "^5.0.1",
     "inherits": "^2.0.1",
     "level": "^1.4.0",
     "minimist": "^1.2.0",
