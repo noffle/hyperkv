@@ -190,8 +190,8 @@ KV.prototype._put = function (key, doc, opts, cb) {
   if (opts.links) {
     self.log.add(opts.links, doc, cb)
   } else {
-    self.dex.ready(function () {
-      self.lock(onlock)
+    self.lock(function (release) {
+      self.dex.ready(function () { onlock(release) })
     })
   }
   function onlock (release) {
