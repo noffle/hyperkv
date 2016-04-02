@@ -218,12 +218,12 @@ KV.prototype.batch = function (rows, opts, cb) {
     var row = rows[i]
     if (row.type === 'put') {
       batch.push({
-        value: { k: row.key, v: row.value },
+        value: xtend(row.value || {}, { k: row.key, v: row.value }),
         links: row.links
       })
     } else if (row.type === 'del') {
       batch.push({
-        value: { d: row.key },
+        value: xtend(row.value || {}, { d: row.key }),
         links: row.links
       })
     } else if (row.type) {
