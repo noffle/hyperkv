@@ -7,6 +7,8 @@ var EventEmitter = require('events').EventEmitter
 var readonly = require('read-only-stream')
 var through = require('through2')
 var Readable = require('readable-stream').Readable
+var xtend = require('xtend')
+var defined = require('defined')
 
 module.exports = KV
 inherits(KV, EventEmitter)
@@ -196,7 +198,59 @@ KV.prototype._put = function (key, doc, opts, cb) {
   }
 }
 
+KV.prototype.batch = function (rows, opts, cb) {
+  var self = this
+  if (typeof opts === 'function') {
+    cb = opts
+    opts = {}
+  }
+  cb = once(cb || noop)
+  if (!opts) opts = {}
+
+  var batch = []
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i]
+    if (row.type === 'put') {
+      batch.push({
+        value: { k: row.key, v: row.value },
+        links: row.links
+      })
+    } else if (row.type === 'del') {
+      batch.push({
+        value: { d: row.key },
+        links: row.links
+      })
+    } else if (row.type) {
+      return ntick(cb, 'batch type not recognized')
+    } else if (!row.type) return ntick(cb, 'batch type not provided')
+  }
+
+  if (batch.every(hasLinks)) return commit()
+
+  self.dex.ready(function () {
+    var pending = batch.length + 1
+    batch.forEach(function (row) {
+      var key = defined(row.value.k, row.value.d)
+      self.xdb.get(key, function (err, links) {
+        if (err && !notFound(err)) return cb(err)
+        row.links = links
+        if (--pending === 0) commit()
+      })
+    })
+    if (--pending === 0) commit()
+  })
+
+  function commit () {
+    self.log.batch(batch, cb)
+  }
+  function hasLinks (row) { return row.links !== undefined }
+}
+
 function notFound (err) {
   return err && (err.notFound || /notfound/i.test(err.message))
 }
 function noop () {}
+function ntick (cb, msg) {
+  var err = new Error(msg)
+  process.nextTick(function () { cb(err) })
+}

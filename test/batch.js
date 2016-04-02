@@ -11,8 +11,8 @@ test('batch', function (t) {
     db: memdb()
   })
   kv.batch([
-    { key: 'A', value: 123 },
-    { key: 'B', value: 456 }
+    { type: 'put', key: 'A', value: 123 },
+    { type: 'put', key: 'B', value: 456 }
   ], onbatch)
 
   function onbatch (err, nodes) {
