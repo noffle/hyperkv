@@ -231,11 +231,12 @@ KV.prototype.batch = function (rows, opts, cb) {
     } else if (!row.type) return ntick(cb, 'batch type not provided')
   }
 
-  if (batch.every(hasLinks)) return commit()
+  if (batch.every(hasLinks)) return self.log.batch(batch, cb)
 
-  self.dex.ready(function () {
-    self.log.batch(batch, cb)
+  self.lock(function (release) {
+    self.dex.ready(function () { onlock(release) })
   })
+
   function onlock (release) {
     var pending = batch.length + 1
     batch.forEach(function (row) {
