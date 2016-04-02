@@ -9,6 +9,7 @@ var through = require('through2')
 var Readable = require('readable-stream').Readable
 var xtend = require('xtend')
 var defined = require('defined')
+var lock = require('mutexify')
 
 module.exports = KV
 inherits(KV, EventEmitter)
@@ -25,6 +26,8 @@ function KV (opts) {
     db: self.idb,
     map: mapfn
   })
+  self.lock = lock()
+
   function mapfn (row, next) {
     if (!row.value) return next()
     if (row.value.k !== undefined) {
@@ -188,11 +191,14 @@ KV.prototype._put = function (key, doc, opts, cb) {
     self.log.add(opts.links, doc, cb)
   } else {
     self.dex.ready(function () {
-      self.xdb.get(key, function (err, links) {
-        if (err && !notFound(err)) return cb(err)
-        self.log.add(links || [], doc, function (err, node) {
-          cb(err, node)
-        })
+      self.lock(onlock)
+    })
+  }
+  function onlock (release) {
+    self.xdb.get(key, function (err, links) {
+      if (err && !notFound(err)) return release(cb, err)
+      self.log.add(links || [], doc, function (err, node) {
+        release(cb, err, node)
       })
     })
   }
@@ -228,20 +234,33 @@ KV.prototype.batch = function (rows, opts, cb) {
   if (batch.every(hasLinks)) return commit()
 
   self.dex.ready(function () {
+    self.log.batch(batch, cb)
+  })
+  function onlock (release) {
     var pending = batch.length + 1
     batch.forEach(function (row) {
       var key = defined(row.value.k, row.value.d)
       self.xdb.get(key, function (err, links) {
-        if (err && !notFound(err)) return cb(err)
+        if (err && !notFound(err)) return release(cb, err)
         row.links = links
         if (--pending === 0) commit()
       })
     })
     if (--pending === 0) commit()
-  })
 
-  function commit () {
-    self.log.batch(batch, cb)
+    function commit () {
+      self.log.batch(batch, function (err, nodes) {
+        release(cb, err, nodes)
+        if (!err) batch.forEach(eachRow)
+        function eachRow (row, i) {
+          if (row.k !== undefined) {
+            self.emit('put', row.k, row.v, nodes[i])
+          } else if (row.d !== undefined) {
+            self.emit('del', row.d, nodes[i])
+          }
+        }
+      })
+    }
   }
   function hasLinks (row) { return row.links !== undefined }
 }
