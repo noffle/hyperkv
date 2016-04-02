@@ -107,6 +107,20 @@ design.
 
 `cb(err, node)` fires from the underlying `log.add()` call.
 
+## kv.batch(rows, opts={}, cb)
+
+Insert an array of documents `rows` atomically into the database.
+
+Each `row` object in the `rows` array should have:
+
+* `row.type` - required, one of: `'put'` or `'del'`
+* `row.key` - required key string
+* `row.value` - value, required when `row.type === 'put'`
+* `row.links` - optional array of ancestor hashes, defaults to most recent heads
+for the key
+
+`cb(err, nodes)` fires from the underlying `log.batch()` call.
+
 ## var stream = kv.createReadStream(opts)
 
 Create a readable object mode `stream` for each key/values in the store.
