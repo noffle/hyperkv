@@ -68,7 +68,8 @@ KV.prototype.put = function (key, value, opts, cb) {
   }
   if (!opts) opts = {}
   if (!cb) cb = noop
-  self._put(key, { k: key, v: value }, opts, function (err, node) {
+  var doc = xtend(opts.field || {}, { k: key, v: value })
+  self._put(key, doc, opts, function (err, node) {
     cb(err, node)
     if (!err) self.emit('put', key, value, node)
   })
@@ -218,12 +219,12 @@ KV.prototype.batch = function (rows, opts, cb) {
     var row = rows[i]
     if (row.type === 'put') {
       batch.push({
-        value: { k: row.key, v: row.value },
+        value: xtend(row.fields || {}, { k: row.key, v: row.value }),
         links: row.links
       })
     } else if (row.type === 'del') {
       batch.push({
-        value: { d: row.key },
+        value: xtend(row.fields || {}, { d: row.key }),
         links: row.links
       })
     } else if (row.type) {
