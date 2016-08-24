@@ -162,6 +162,7 @@ KV.prototype.createHistoryStream = function (key, opts) {
   var seen = {}
   self.dex.ready(function () {
     self.xdb.get(key, function (err, heads) {
+      if (err) return stream.emit('error', err)
       queue = heads
       if (reading) stream._read()
     })
