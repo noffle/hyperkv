@@ -7,7 +7,7 @@ var collect = require('collect-stream')
 var toposort = require('toposort')
 
 test('history', function (t) {
-  t.plan(6)
+  t.plan(7)
   var db = memdb()
   var kv = hyperkv({
     log: hyperlog(sub(db, 'log'), { valueEncoding: 'json' }),
@@ -66,6 +66,9 @@ test('history', function (t) {
           links: [ nodes.B.key, nodes.C.key ]
         }
       ]), 'expected history')
+    })
+    collect(kv.createHistoryStream('missing'), function (err) {
+      t.true(err instanceof Error, 'emits error for missing id')
     })
   }
 })
