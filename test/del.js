@@ -3,6 +3,25 @@ var hyperkv = require('../')
 var memdb = require('memdb')
 var hyperlog = require('hyperlog')
 var sub = require('subleveldown')
+var eos = require('end-of-stream')
+
+// Sync two hyperlogs together.
+function sync (a, b, done) {
+  var r1 = a.replicate()
+  var r2 = b.replicate()
+  r1.pipe(r2).pipe(r1)
+  var pending = 2
+
+  eos(r1, onend)
+  eos(r2, onend)
+
+  function onend (err) {
+    if (err) return done(err)
+    if (--pending === 0) {
+      done(err)
+    }
+  }
+}
 
 test('del', function (t) {
   t.plan(12)
@@ -40,4 +59,39 @@ test('del', function (t) {
       })
     })
   }
+})
+
+test('return delete and put when there is ambiguity', function (t) {
+  t.plan(7)
+  var db1 = memdb()
+  var db2 = memdb()
+  var kv1 = hyperkv({
+    log: hyperlog(sub(db1, 'log'), { valueEncoding: 'json' }),
+    db: sub(db1, 'kv')
+  })
+  var kv2 = hyperkv({
+    log: hyperlog(sub(db2, 'log'), { valueEncoding: 'json' }),
+    db: sub(db2, 'kv')
+  })
+
+  kv1.put('foo', 'bar', function (err, res) {
+    t.ifError(err)
+    kv2.put('foo', 'bar', function (err, res) {
+      t.ifError(err)
+      kv1.del('foo', function (err, res) {
+        t.ifError(err)
+        kv2.put('foo', 'box', function (err, res) {
+          t.ifError(err)
+          sync(kv1.log, kv2.log, function (err) {
+            t.ifError(err)
+            kv1.get('foo', function (err, values) {
+              console.log('final', err, values)
+              t.ifError(err)
+              t.equal(Object.keys(values).length, 2)
+            })
+          })
+        })
+      })
+    })
+  })
 })
