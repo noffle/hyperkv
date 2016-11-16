@@ -88,8 +88,12 @@ KV.prototype.del = function (key, opts, cb) {
   })
 }
 
-KV.prototype.get = function (key, cb) {
+KV.prototype.get = function (key, opts, cb) {
   var self = this
+  if (typeof opts === 'function') {
+    cb = opts
+    opts = {}
+  }
   cb = once(cb || noop)
   self.dex.ready(function () {
     self.xdb.get(key, function (err, links) {
