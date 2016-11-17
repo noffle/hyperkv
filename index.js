@@ -31,25 +31,33 @@ function KV (opts) {
   function mapfn (row, next) {
     if (!row.value) return next()
     if (row.value.k !== undefined) {
-      self.xdb.get(row.value.k, function (err, keys) {
+      self.xdb.get(row.value.k, function (err, ops) {
         var doc = {}
-        ;(keys || []).forEach(function (key) { doc[key] = true })
+        ;(ops || []).forEach(function (op) { doc[op.key] = op.type })
         row.links.forEach(function (link) { delete doc[link] })
-        doc[row.key] = true
-        self.xdb.put(row.value.k, Object.keys(doc), function (err) {
+        doc[row.key] = 'put'
+
+        doc = Object.keys(doc).map(function (k) {
+          return { key: k, type: doc[k] }
+        })
+
+        self.xdb.put(row.value.k, doc, function (err) {
           if (!err) self.emit('update', row.value.k, row.value.v, row)
           next(err)
         })
       })
     } else if (row.value.d !== undefined) {
-      self.xdb.get(row.value.d, function (err, keys) {
+      self.xdb.get(row.value.d, function (err, ops) {
         var doc = {}
-        ;(keys || []).forEach(function (key) { doc[key] = true })
+        ;(ops || []).forEach(function (op) { doc[op.key] = op.type })
         row.links.forEach(function (link) { delete doc[link] })
-        var keys = Object.keys(doc)
-        if (keys.length === 0) {
-          self.xdb.del(row.value.d, onput)
-        } else self.xdb.put(row.value.d, keys, onput)
+        doc[row.key] = 'del'
+
+        doc = Object.keys(doc).map(function (k) {
+          return { key: k, type: doc[k] }
+        })
+
+        self.xdb.put(row.value.d, doc, onput)
 
         function onput (err) {
           if (!err) self.emit('remove', row.value.d, row)
@@ -92,14 +100,22 @@ KV.prototype.get = function (key, cb) {
   var self = this
   cb = once(cb || noop)
   self.dex.ready(function () {
-    self.xdb.get(key, function (err, links) {
+    self.xdb.get(key, function (err, data) {
+      var docs = {}
+      data = data || []
+      data.forEach(function (datum) {
+        docs[datum.key] = datum.type
+      })
+      var keys = Object.keys(docs)
+
       var values = {}
-      if (!links) links = []
-      var pending = links.length + 1
-      links.forEach(function (link) {
-        self.log.get(link, function (err, doc) {
+      var pending = keys.length + 1
+      keys.forEach(function (key) {
+        self.log.get(key, function (err, doc) {
           if (err) return cb(err)
-          values[link] = doc.value.v
+          if (docs[key] === 'put') values[key] = { value: doc.value.v }
+          else if (docs[key] === 'del') values[key] = { deleted: true }
+          else return cb(new Error('unknown type'))
           if (--pending === 0) cb(null, values)
         })
       })
@@ -126,7 +142,7 @@ KV.prototype.createReadStream = function (opts) {
   function write (row, enc, next) {
     var nrow = {
       key: row.key,
-      links: row.value
+      links: row.value.map(function (v) { return v.key })
     }
     if (opts.values !== false) {
       self.get(row.key, function (err, values) {
@@ -154,6 +170,7 @@ KV.prototype.createHistoryStream = function (key, opts) {
     }
     if (queue.length === 0) return stream.push(null)
     var q = queue.shift()
+    if (q.key) q = q.key
     if (has(seen, q)) return stream._read()
     seen[q] = true
     self.log.get(q, onget)
