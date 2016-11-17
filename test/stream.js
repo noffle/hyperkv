@@ -21,7 +21,7 @@ test('stream', function (t) {
     F: { links: [], key: 'Y', value: 999 },
     G: { links: ['C'], key: 'Z', value: 2000 },
     H: { links: ['C'], key: 'Z', value: 2500 },
-    I: { links: ['G','H'], key: 'Z', value: 3000 },
+    I: { links: ['G', 'H'], key: 'Z', value: 3000 }
   }
 
   var nodes = []

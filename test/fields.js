@@ -25,7 +25,7 @@ test('fields', function (t) {
           key: 'A',
           values: expected,
           links: [node.key]
-         }])
+        }])
       })
     })
   })

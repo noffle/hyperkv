@@ -5,7 +5,6 @@ var hyperlog = require('hyperlog')
 
 test('batch', function (t) {
   t.plan(5)
-  var db = memdb()
   var kv = hyperkv({
     log: hyperlog(memdb(), { valueEncoding: 'json' }),
     db: memdb()
