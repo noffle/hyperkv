@@ -45,24 +45,28 @@ test('del', function (t) {
     kv.get('A', function (err, values) {
       t.ifError(err)
       var expected = {}
-      expected[node.key] = 555
+      expected[node.key] = { value: 555 }
       t.deepEqual(values, expected, 'expected values for key A')
       remove()
     })
   })
   function remove () {
-    kv.del('A', function (err) {
+    kv.del('A', function (err, node) {
       t.ifError(err)
+      var delKey = node.key
       kv.get('A', function (err, values) {
         t.ifError(err)
-        t.deepEqual(values, {})
+        var expected = {}
+        expected[delKey] = { deleted: true }
+        t.deepEqual(values, expected)
       })
     })
   }
 })
 
 test('return delete and put when there is ambiguity', function (t) {
-  t.plan(7)
+  t.plan(10)
+
   var db1 = memdb()
   var db2 = memdb()
   var kv1 = hyperkv({
@@ -74,20 +78,27 @@ test('return delete and put when there is ambiguity', function (t) {
     db: sub(db2, 'kv')
   })
 
-  kv1.put('foo', 'bar', function (err, res) {
+  var expectedPut
+  var expectedDel
+
+  kv1.put('foo', 'bar', function (err, node) {
     t.ifError(err)
-    kv2.put('foo', 'bar', function (err, res) {
+    kv2.put('foo', 'bar', function (err, node) {
       t.ifError(err)
-      kv1.del('foo', function (err, res) {
+      kv1.del('foo', function (err, node) {
         t.ifError(err)
-        kv2.put('foo', 'box', function (err, res) {
+        expectedDel = node.key
+        kv2.put('foo', 'box', function (err, node) {
           t.ifError(err)
+          expectedPut = node.key
           sync(kv1.log, kv2.log, function (err) {
             t.ifError(err)
             kv1.get('foo', function (err, values) {
-              console.log('final', err, values)
               t.ifError(err)
               t.equal(Object.keys(values).length, 2)
+              t.notEqual(expectedPut, expectedDel)
+              t.deepEqual(values[expectedPut], { value: 'box' })
+              t.deepEqual(values[expectedDel], { deleted: true })
             })
           })
         })

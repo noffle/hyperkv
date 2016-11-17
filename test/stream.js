@@ -51,20 +51,20 @@ test('stream', function (t) {
         links: [ nodes.D.key, nodes.E.key ],
         values: {}
       })
-      expected[0].values[nodes.D.key] = 222
-      expected[0].values[nodes.E.key] = 400
+      expected[0].values[nodes.D.key] = { value: 222 }
+      expected[0].values[nodes.E.key] = { value: 400 }
       expected.push({
         key: 'Y',
         links: [ nodes.F.key ],
         values: {}
       })
-      expected[1].values[nodes.F.key] = 999
+      expected[1].values[nodes.F.key] = { value: 999 }
       expected.push({
         key: 'Z',
         links: [ nodes.I.key ],
         values: {}
       })
-      expected[2].values[nodes.I.key] = 3000
+      expected[2].values[nodes.I.key] = { value: 3000 }
       t.deepEqual(rows, expected, 'stream {}')
     })
     collect(kv.createReadStream({ values: false }), function (err, rows) {
@@ -92,13 +92,13 @@ test('stream', function (t) {
         links: [ nodes.F.key ],
         values: {}
       })
-      expected[0].values[nodes.F.key] = 999
+      expected[0].values[nodes.F.key] = { value: 999 }
       expected.push({
         key: 'Z',
         links: [ nodes.I.key ],
         values: {}
       })
-      expected[1].values[nodes.I.key] = 3000
+      expected[1].values[nodes.I.key] = { value: 3000 }
       t.deepEqual(rows, expected, 'stream { gt: "X" }')
     })
   }

@@ -26,7 +26,7 @@ test('kv', function (t) {
     kv.get('A', function (err, values) {
       t.ifError(err)
       var expected = {}
-      expected[node.key] = 555
+      expected[node.key] = { value: 555 }
       t.deepEqual(values, expected, 'expected values for key A')
     })
   })

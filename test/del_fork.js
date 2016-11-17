@@ -26,7 +26,7 @@ test('del forks', function (t) {
     I: { links: ['G','H'], key: 'Z', value: 3000 },
   }
 
-  var nodes = [], xput
+  var nodes = [], xput, xdel
   var keys = Object.keys(docs).sort()
   ;(function next () {
     if (keys.length === 0) return done()
@@ -50,22 +50,22 @@ test('del forks', function (t) {
       t.ifError(err)
       xvalues = values
       var expected = {}
-      expected[nodes.E.key] = 400
-      expected[nodes.D.key] = 222
+      expected[nodes.E.key] = { value: 400 }
+      expected[nodes.D.key] = { value: 222 }
       t.deepEqual(values, expected, 'X')
       if (--pending === 0) replicate0()
     })
     kv0.get('Y', function (err, values) {
       t.ifError(err)
       var expected = {}
-      expected[nodes.F.key] = 999
+      expected[nodes.F.key] = { value: 999 }
       t.deepEqual(values, expected, 'Y')
       if (--pending === 0) replicate0()
     })
     kv0.get('Z', function (err, values) {
       t.ifError(err)
       var expected = {}
-      expected[nodes.I.key] = 3000
+      expected[nodes.I.key] = { value: 3000 }
       t.deepEqual(values, expected, 'Y')
       if (--pending === 0) replicate0()
     })
@@ -77,8 +77,9 @@ test('del forks', function (t) {
     r0.once('end', fork)
   }
   function fork () {
-    kv0.del('X', function (err) {
+    kv0.del('X', function (err, node) {
       t.ifError(err)
+      xdel = node
       kv1.put('X', 111, function (err, node) {
         t.ifError(err)
         xput = node
@@ -96,7 +97,8 @@ test('del forks', function (t) {
     kv0.get('X', function (err, values) {
       t.ifError(err)
       var expected = {}
-      expected[xput.key] = 111
+      expected[xput.key] = { value: 111 }
+      expected[xdel.key] = { deleted: true }
       t.deepEqual(values, expected)
     })
   }
