@@ -45,20 +45,20 @@ test('forks', function (t) {
     kv.get('X', function (err, values) {
       t.ifError(err)
       var expected = {}
-      expected[nodes.E.key] = 400
-      expected[nodes.D.key] = 222
+      expected[nodes.E.key] = { value: 400 }
+      expected[nodes.D.key] = { value: 222 }
       t.deepEqual(values, expected, 'X')
     })
     kv.get('Y', function (err, values) {
       t.ifError(err)
       var expected = {}
-      expected[nodes.F.key] = 999
+      expected[nodes.F.key] = { value: 999 }
       t.deepEqual(values, expected, 'Y')
     })
     kv.get('Z', function (err, values) {
       t.ifError(err)
       var expected = {}
-      expected[nodes.I.key] = 3000
+      expected[nodes.I.key] = { value: 3000 }
       t.deepEqual(values, expected, 'Y')
     })
   }

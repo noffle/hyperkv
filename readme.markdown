@@ -55,15 +55,17 @@ var kv = hyperkv({
 })
 
 var key = process.argv[2]
-kv.get(key, function (err, value) {
+kv.get(key, function (err, values) {
   if (err) console.error(err)
-  else console.log(value)
+  else console.log(values)
 })
 ```
 
 ```
 $ node example/get.js greeting
-{ eadb22a224313d5fb5b811e50915f16491e7714dd32b83503c1e1a1db2bd9e9b: 'beep boop' } 
+{
+  eadb22a224313d5fb5b811e50915f16491e7714dd32b83503c1e1a1db2bd9e9b: { value: 'beep boop' }
+}
 ```
 
 # api
@@ -92,8 +94,16 @@ raw document that is stored in the db alongside the `k` and `v` properties.
 
 ## kv.get(key, opts={}, cb)
 
-Get the list of current values for `key` as `cb(err, values)` where `values`
-maps hyperlog hashes to set values.
+Get the current values for `key` as `cb(err, values)` where `values` maps
+hyperlog hashes to set values.
+
+Each value is an object of one of two forms:
+
+- `{ value: ... }` - the value of the key
+- `{ deleted: true }` - tombstone indicating the key has been deleted
+
+It is possible to receive both types for the same key; it is left up to the api
+consumer to decide how the data is best interpreted.
 
 If there are no known values for `key`, `values` will be `{}`.
 

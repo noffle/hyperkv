@@ -30,7 +30,7 @@ test('batch', function (t) {
     kv.get('A', function (err, values) {
       t.error(err)
       var expected = {}
-      expected[nodes[0].key] = 444
+      expected[nodes[0].key] = { value: 444 }
       t.deepEqual(values, expected, 'last value for A')
     })
   }

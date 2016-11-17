@@ -26,9 +26,11 @@ test('del stream', function (t) {
 
   var nodes = []
   var keys = Object.keys(docs).sort()
+  var delNode
   ;(function next () {
     if (keys.length === 0) {
       return kv.del('X', function (err, node) {
+        delNode = node
         t.ifError(err)
         done()
       })
@@ -52,22 +54,32 @@ test('del stream', function (t) {
       t.ifError(err)
       var expected = []
       expected.push({
+        key: 'X',
+        links: [ delNode.key ],
+        values: {}
+      })
+      expected[0].values[delNode.key] = { deleted: true }
+      expected.push({
         key: 'Y',
         links: [ nodes.F.key ],
         values: {}
       })
-      expected[0].values[nodes.F.key] = 999
+      expected[1].values[nodes.F.key] = { value: 999 }
       expected.push({
         key: 'Z',
         links: [ nodes.I.key ],
         values: {}
       })
-      expected[1].values[nodes.I.key] = 3000
+      expected[2].values[nodes.I.key] = { value: 3000 }
       t.deepEqual(rows, expected, 'stream {}')
     })
     collect(kv.createReadStream({ values: false }), function (err, rows) {
       t.ifError(err)
       var expected = []
+      expected.push({
+        key: 'X',
+        links: [ delNode.key ]
+      })
       expected.push({
         key: 'Y',
         links: [ nodes.F.key ]
@@ -86,13 +98,13 @@ test('del stream', function (t) {
         links: [ nodes.F.key ],
         values: {}
       })
-      expected[0].values[nodes.F.key] = 999
+      expected[0].values[nodes.F.key] = { value: 999 }
       expected.push({
         key: 'Z',
         links: [ nodes.I.key ],
         values: {}
       })
-      expected[1].values[nodes.I.key] = 3000
+      expected[1].values[nodes.I.key] = { value: 3000 }
       t.deepEqual(rows, expected, 'stream { gt: "X" }')
     })
   }
