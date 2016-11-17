@@ -68,7 +68,8 @@ KV.prototype.put = function (key, value, opts, cb) {
   }
   if (!opts) opts = {}
   if (!cb) cb = noop
-  self._put(key, { k: key, v: value }, opts, function (err, node) {
+  var doc = xtend(opts.fields || {}, { k: key, v: value })
+  self._put(key, doc, opts, function (err, node) {
     cb(err, node)
     if (!err) self.emit('put', key, value, node)
   })
@@ -94,6 +95,7 @@ KV.prototype.get = function (key, opts, cb) {
     cb = opts
     opts = {}
   }
+  if (!opts) opts = {}
   cb = once(cb || noop)
   self.dex.ready(function () {
     self.xdb.get(key, function (err, links) {
@@ -103,7 +105,7 @@ KV.prototype.get = function (key, opts, cb) {
       links.forEach(function (link) {
         self.log.get(link, function (err, doc) {
           if (err) return cb(err)
-          values[link] = doc.value.v
+          values[link] = opts.fields ? doc.value : doc.value.v
           if (--pending === 0) cb(null, values)
         })
       })
@@ -133,7 +135,7 @@ KV.prototype.createReadStream = function (opts) {
       links: row.value
     }
     if (opts.values !== false) {
-      self.get(row.key, function (err, values) {
+      self.get(row.key, opts, function (err, values) {
         if (err) return next(err)
         nrow.values = values
         stream.push(nrow)
@@ -223,12 +225,12 @@ KV.prototype.batch = function (rows, opts, cb) {
     var row = rows[i]
     if (row.type === 'put') {
       batch.push({
-        value: xtend(row.value || {}, { k: row.key, v: row.value }),
+        value: xtend(row.fields || {}, { k: row.key, v: row.value }),
         links: row.links
       })
     } else if (row.type === 'del') {
       batch.push({
-        value: xtend(row.value || {}, { d: row.key }),
+        value: xtend(row.fields || {}, { d: row.key }),
         links: row.links
       })
     } else if (row.type) {

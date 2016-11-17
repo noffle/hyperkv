@@ -70,6 +70,7 @@ test('history', function (t) {
     collect(kv.createHistoryStream('missing'), function (err) {
       t.true(err instanceof Error, 'emits error for missing id')
     })
+
   }
 })
 

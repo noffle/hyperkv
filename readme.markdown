@@ -85,14 +85,20 @@ Set `key` to a json `value`.
 If `opts.links` is set, refer to previously set keys. Otherwise, the key will
 refer to the current "head" key hashes.
 
+If `opts.fields` is set, merge the object properties of `opts.fields` into the
+raw document that is stored in the db alongside the `k` and `v` properties.
+
 `cb(err, node)` fires from the underlying `log.add()` call.
 
-## kv.get(key, cb)
+## kv.get(key, opts={}, cb)
 
 Get the list of current values for `key` as `cb(err, values)` where `values`
 maps hyperlog hashes to set values.
 
 If there are no known values for `key`, `values` will be `{}`.
+
+If `opts.fields` is true, include the raw document as each value instead of
+individual values.
 
 ## kv.del(key, opts={}, cb)
 
@@ -106,6 +112,9 @@ that edits made in forks may cause deleted keys to "reappear". This is by
 design.
 
 `cb(err, node)` fires from the underlying `log.add()` call.
+
+If `opts.fields` is set, merge the object properties of `opts.fields` into the
+raw document that is stored in the db alongside the `d` property.
 
 ## kv.batch(rows, opts={}, cb)
 
@@ -135,6 +144,7 @@ Optionally:
 
 * `opts.values` - set to `false` to turn off setting `row.values`, which
 requires an extra lookup in the implementation
+* `opts.fields` - when true, include the full document instead of the value
 
 ## var stream = kv.createHistoryStream(key, opts={})
 
