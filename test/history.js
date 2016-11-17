@@ -17,7 +17,7 @@ test('history', function (t) {
     A: { links: [], key: 'X', value: 100 },
     B: { links: ['A'], key: 'X', value: 201 },
     C: { links: ['A'], key: 'X', value: 202 },
-    D: { links: ['B','C'], key: 'X', value: 300 }
+    D: { links: ['B', 'C'], key: 'X', value: 300 }
   }
   var nodes = {}
   var keys = Object.keys(docs).sort()
@@ -70,12 +70,12 @@ test('history', function (t) {
     collect(kv.createHistoryStream('missing'), function (err) {
       t.true(err instanceof Error, 'emits error for missing id')
     })
-
   }
 })
 
 function sort (rows) {
-  var edges = [], map = {}
+  var edges = []
+  var map = {}
   rows.forEach(function (row) {
     map[row.link] = row
     row.links.forEach(function (link) {

@@ -34,6 +34,10 @@ function KV (opts) {
     if (!row.value) return next()
     if (row.value.k !== undefined) {
       self.xdb.get(row.value.k, function (err, ops) {
+        if (err && !notFound(err)) {
+          self.emit('error', err)
+          return next()
+        }
         var doc = {}
         ;(ops || []).forEach(function (op) { doc[op.key] = op.type })
         row.links.forEach(function (link) { delete doc[link] })
@@ -50,6 +54,10 @@ function KV (opts) {
       })
     } else if (row.value.d !== undefined) {
       self.xdb.get(row.value.d, function (err, ops) {
+        if (err && !notFound(err)) {
+          self.emit('error', err)
+          return next()
+        }
         var doc = {}
         ;(ops || []).forEach(function (op) { doc[op.key] = op.type })
         row.links.forEach(function (link) { delete doc[link] })
@@ -109,6 +117,7 @@ KV.prototype.get = function (key, opts, cb) {
   cb = once(cb || noop)
   self.dex.ready(function () {
     self.xdb.get(key, function (err, data) {
+      if (err && !notFound(err)) return cb(err)
       var docs = {}
       data = data || []
       data.forEach(function (datum) {
@@ -175,7 +184,8 @@ KV.prototype.createHistoryStream = function (key, opts) {
   var self = this
   if (!opts) opts = {}
   var stream = new Readable({ objectMode: true })
-  var queue = null, reading = false
+  var queue = null
+  var reading = false
   stream._read = function () {
     if (!queue) {
       reading = true

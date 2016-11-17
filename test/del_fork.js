@@ -2,7 +2,6 @@ var test = require('tape')
 var hyperkv = require('../')
 var memdb = require('memdb')
 var hyperlog = require('hyperlog')
-var sub = require('subleveldown')
 
 test('del forks', function (t) {
   t.plan(19)
@@ -23,10 +22,12 @@ test('del forks', function (t) {
     F: { links: [], key: 'Y', value: 999 },
     G: { links: ['C'], key: 'Z', value: 2000 },
     H: { links: ['C'], key: 'Z', value: 2500 },
-    I: { links: ['G','H'], key: 'Z', value: 3000 },
+    I: { links: ['G', 'H'], key: 'Z', value: 3000 }
   }
 
-  var nodes = [], xput, xdel
+  var nodes = []
+  var xput
+  var xdel
   var keys = Object.keys(docs).sort()
   ;(function next () {
     if (keys.length === 0) return done()
@@ -48,7 +49,6 @@ test('del forks', function (t) {
     var pending = 3
     kv0.get('X', function (err, values) {
       t.ifError(err)
-      xvalues = values
       var expected = {}
       expected[nodes.E.key] = { value: 400 }
       expected[nodes.D.key] = { value: 222 }
