@@ -10,6 +10,8 @@ var Readable = require('readable-stream').Readable
 var xtend = require('xtend')
 var defined = require('defined')
 var lock = require('mutexify')
+var pump = require('pump')
+var liveStream = require('level-live-stream')
 
 module.exports = KV
 inherits(KV, EventEmitter)
@@ -125,7 +127,9 @@ KV.prototype.createReadStream = function (opts) {
   }
   var stream = through.obj(write)
   self.dex.ready(function () {
-    self.xdb.createReadStream(xopts).pipe(stream)
+    if (opts.live) {
+      pump(liveStream(self.xdb, xopts), stream)
+    } else pump(self.xdb.createReadStream(xopts), stream)
   })
   return readonly(stream)
 
