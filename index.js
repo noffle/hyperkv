@@ -12,9 +12,13 @@ var defined = require('defined')
 var lock = require('mutexify')
 var pump = require('pump')
 var liveStream = require('level-live-stream')
+var prepare = require('./prepare')
+var levelWipe = require('./wipe-levelup')
 
 module.exports = KV
 inherits(KV, EventEmitter)
+
+var XDB_VERSION = 2
 
 function KV (opts) {
   if (!(this instanceof KV)) return new KV(opts)
@@ -25,14 +29,15 @@ function KV (opts) {
   self.log = opts.log
   self.idb = sub(opts.db, 'i')
   self.xdb = sub(opts.db, 'x', { valueEncoding: 'json' })
-  self.dex = indexer({
-    log: self.log,
-    db: self.idb,
-    map: mapfn
+  self.xdbMeta = sub(opts.db, 'm', { valueEncoding: 'json' })
   self.writeLock = lock()
+
+  // lock kv until preparation operations are complete
+  self._inited = prepare(function (done) {
+    self._prepare(done)
   })
 
-  function mapfn (row, next) {
+  self.mapfn = function (row, next) {
     if (!row.value) return next()
     if (row.value.k !== undefined) {
       self.xdb.get(row.value.k, function (err, ops) {
@@ -117,7 +122,7 @@ KV.prototype.get = function (key, opts, cb) {
   }
   if (!opts) opts = {}
   cb = once(cb || noop)
-  self.dex.ready(function () {
+  self._ready(function () {
     self.xdb.get(key, function (err, data) {
       if (err && !notFound(err)) return cb(err)
       var docs = {}
@@ -156,7 +161,7 @@ KV.prototype.createReadStream = function (opts) {
     lte: opts.lte
   }
   var stream = through.obj(write)
-  self.dex.ready(function () {
+  self._ready(function () {
     if (opts.live) {
       pump(liveStream(self.xdb, xopts), stream)
     } else pump(self.xdb.createReadStream(xopts), stream)
@@ -202,7 +207,7 @@ KV.prototype.createHistoryStream = function (key, opts) {
   }
 
   var seen = {}
-  self.dex.ready(function () {
+  self._ready(function () {
     self.xdb.get(key, function (err, heads) {
       if (err) return stream.emit('error', err)
       queue = heads
@@ -234,7 +239,7 @@ KV.prototype._put = function (key, doc, opts, cb) {
     self.log.add(opts.links, doc, cb)
   } else {
     self.writeLock(function (release) {
-      self.dex.ready(function () { onlock(release) })
+      self._ready(function () { onlock(release) })
     })
   }
   function onlock (release) {
@@ -277,7 +282,7 @@ KV.prototype.batch = function (rows, opts, cb) {
   if (batch.every(hasLinks)) return self.log.batch(batch, cb)
 
   self.writeLock(function (release) {
-    self.dex.ready(function () { onlock(release) })
+    self._ready(function () { onlock(release) })
   })
 
   function onlock (release) {
@@ -307,6 +312,80 @@ KV.prototype.batch = function (rows, opts, cb) {
     }
   }
   function hasLinks (row) { return row.links !== undefined }
+}
+
+// Operations to perform before the KV is ready for use.
+KV.prototype._prepare = function (fin) {
+  var self = this
+
+  // Check the xdb version; possibly regenerate it and the index.
+  getXdbVersion(function (err, version) {
+    if (err) return fin(err)
+
+    wipeIndexesIfVersionMismatch(version, function (err) {
+      if (err) return fin(err)
+
+      createIndexer()
+
+      self.xdbMeta.put('version', XDB_VERSION, function (err) {
+        if (err) return fin(err)
+
+        self.dex.ready(fin)
+      })
+    })
+  })
+
+  // retrieve the xdb index version
+  function getXdbVersion (done) {
+    self.xdbMeta.get('version', function (err, value) {
+      // not found; this must be version 1 (before this key was stored)
+      if (notFound(err)) {
+        done(null, 1)
+      } else if (err) {
+        done(err)
+      } else {
+        done(null, value)
+      }
+    })
+  }
+
+  // wipe index: xdb and dex
+  function wipeIndexesIfVersionMismatch (version, done) {
+    if (version !== XDB_VERSION) {
+      levelWipe(self.xdb, function (err) {
+        if (err) return done(err)
+        levelWipe(self.idb, function (err) {
+          done(err)
+        })
+      })
+    }
+  }
+
+  // create the hyperlog-index
+  function createIndexer () {
+    self.dex = indexer({
+      log: self.log,
+      db: self.idb,
+      map: self.mapfn
+    })
+  }
+}
+
+// Calls 'done' once KV creation-time preparations are done and the indexer is
+// caught up.
+KV.prototype._ready = function (done) {
+  if (!this.dex) {
+    return this._inited(done)
+  } else {
+    var pending = 2
+
+    this._inited(onready)
+    this.dex.ready(onready)
+
+    function onready () {
+      if (--pending === 0) done()
+    }
+  }
 }
 
 function notFound (err) {
