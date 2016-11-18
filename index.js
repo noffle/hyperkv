@@ -19,7 +19,9 @@ inherits(KV, EventEmitter)
 function KV (opts) {
   if (!(this instanceof KV)) return new KV(opts)
   var self = this
+
   EventEmitter.call(self)
+
   self.log = opts.log
   self.idb = sub(opts.db, 'i')
   self.xdb = sub(opts.db, 'x', { valueEncoding: 'json' })
@@ -27,8 +29,8 @@ function KV (opts) {
     log: self.log,
     db: self.idb,
     map: mapfn
+  self.writeLock = lock()
   })
-  self.lock = lock()
 
   function mapfn (row, next) {
     if (!row.value) return next()
@@ -231,7 +233,7 @@ KV.prototype._put = function (key, doc, opts, cb) {
   if (opts.links) {
     self.log.add(opts.links, doc, cb)
   } else {
-    self.lock(function (release) {
+    self.writeLock(function (release) {
       self.dex.ready(function () { onlock(release) })
     })
   }
@@ -274,7 +276,7 @@ KV.prototype.batch = function (rows, opts, cb) {
 
   if (batch.every(hasLinks)) return self.log.batch(batch, cb)
 
-  self.lock(function (release) {
+  self.writeLock(function (release) {
     self.dex.ready(function () { onlock(release) })
   })
 
@@ -310,7 +312,9 @@ KV.prototype.batch = function (rows, opts, cb) {
 function notFound (err) {
   return err && (err.notFound || /notfound/i.test(err.message))
 }
+
 function noop () {}
+
 function ntick (cb, msg) {
   var err = new Error(msg)
   process.nextTick(function () { cb(err) })
