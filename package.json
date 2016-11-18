@@ -26,6 +26,7 @@
     "hyperlog": "^4.7.0",
     "memdb": "^1.0.1",
     "tape": "^4.2.2",
+    "temp": "^0.8.3",
     "toposort": "^0.2.12"
   },
   "dependencies": {
