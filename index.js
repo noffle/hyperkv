@@ -358,6 +358,8 @@ KV.prototype._prepare = function (fin) {
           done(err)
         })
       })
+    } else {
+      done()
     }
   }
 
