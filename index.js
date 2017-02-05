@@ -101,7 +101,8 @@ KV.prototype.del = function (key, opts, cb) {
   }
   if (!opts) opts = {}
   if (!cb) cb = noop
-  self._put(key, { d: key }, opts, function (err, node) {
+  var doc = xtend(opts.fields || {}, { d: key })
+  self._put(key, doc, opts, function (err, node) {
     cb(err, node)
     if (!err) self.emit('del', key, node)
   })
