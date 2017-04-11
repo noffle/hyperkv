@@ -280,6 +280,7 @@ KV.prototype.batch = function (rows, opts, cb) {
   })
 
   function onlock (release) {
+    release = once(release)
     var pending = batch.length + 1
     batch.forEach(function (row) {
       var key = defined(row.value.k, row.value.d)
