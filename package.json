@@ -33,7 +33,6 @@
     "has": "^1.0.1",
     "hyperlog-index": "^5.0.1",
     "inherits": "^2.0.1",
-    "level": "^1.4.0",
     "level-live-stream": "^1.4.12",
     "minimist": "^1.2.0",
     "mkdirp": "^0.5.1",
